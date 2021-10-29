@@ -6,60 +6,26 @@
 #include <algorithm>
 #include <set>
 #include <cmath>
-#include <charconv>
-#include <sys/stat.h>
-#include <fcntl.h>
-enum {
-	READ_END=0,
-	WRITE_END=1,
-};
-enum {
-	STDIN = 0,
-	STDOUT = 1,
-	STDERR = 2,
-};
-enum {
-	ALL_GOOD=0,
-	ERROR_CREATING_PIPE,
-	ERROR_CHILD_ARGS,
-	ERROR_CREATING_PROCESS,
-	ERROR_EXECUTING_PROGRAM,
-	ERROR_READING_INPUT,
-	ERROR_WRITING_PIPE,
-	ERROR_READING_PIPE,
-	ERROR_WRITING_ERR,
-};
 
 bool is_prime(const int& number);
 void put_all_primes_until(std::set<int>& primes, int num);
 
 int main(int argc, char* argv[]) {
-	const char space = ' ';
-	const char error_not_enough_arguments[] = "not enough arguments";
-	const char error_reading_pipe[] = "child: error with reading";
-	const char error_writing_pipe[] = "child: error with writing";
 	if(argc < 2) {
-		if(write(STDERR, error_not_enough_arguments, sizeof(error_not_enough_arguments)) == -1) {
-			return ERROR_WRITING_ERR;
-		}
-		for(int i = 0; i < argc; i++)
-			if(write(STDERR, argv[i], sizeof(argv[i])) == -1) {
-				return ERROR_WRITING_ERR;
-			}
+		std::cerr << "not enough arguments: " << argc << std::endl << argv[0] << std::endl<< argv[1];
+		write
 		return 1; //hz pochemy ne 3 argumenta kak pri vizove iz kommandnoi stroki
 	}
 	int&& pipe_parent_to_son_read = std::stoi(static_cast<std::string>(argv[0])); //I can use try-catch, but naaah
 	int&& pipe_son_to_parent_write = std::stoi(static_cast<std::string>(argv[1]));
-	int file_descriptor = open("numbers.ans", O_CREAT | O_TRUNC | O_WRONLY);
-	int number = 1;// kst kak vishlo v proshlii raz, esli negative opredelalsa vne while
-	char number_string[10] = { 0 };
-	int num_size_to_write = 0;
+	int file_descriptor = creat("numbers.ans");
+	int number(1);// kst kak vishlo v proshlii raz, esli negative opredelalsa vne while
+	char number_string[10];
 	while(true) {
 		if(read(pipe_parent_to_son_read, &number, sizeof(number)) == -1) {
-			if(write(STDERR, error_reading_pipe, sizeof(error_reading_pipe)) == -1) {
-				return ERROR_WRITING_ERR;
-			}
-			return ERROR_READING_PIPE;
+			std::cerr << "child: error with reading" << std::endl;
+			write
+			return -1;
 		}
 		//std::cout << number
 		bool negative = number < 0;
@@ -68,23 +34,20 @@ int main(int argc, char* argv[]) {
 			prime = is_prime(number);
 			//magic __ prime=
 		}
-		bool num_is_correct = !(negative || prime);
+		bool num_is_correct = !(prime || negative);
 		if(write(pipe_son_to_parent_write, &num_is_correct, sizeof(num_is_correct)) == -1) {
-			if(write(STDERR, error_writing_pipe, sizeof(error_writing_pipe)) == -1) {
-				return ERROR_WRITING_ERR;
-			}
-			return ERROR_WRITING_PIPE;
+			std::cerr << "child: error with writing" << std::endl;
+			write
+			return -1;
 		}
 		if(num_is_correct) {
-			std::to_chars(number_string, number_string + sizeof(number_string), number);
-			for(long unsigned int i = 0; i < sizeof(number_string); ++i)
-				if(number_string[i] == '\0') { num_size_to_write = i; break;} //I can div 10
-			write(file_descriptor, number_string, num_size_to_write);
-			write(file_descriptor, &space, sizeof(' '));
+			std::to_chars(number_string, number_string+sizeof(number_string), number);
+			write(file_descriptor, number_string, sizeof(number_string));
+			write(file_descriptor, ' ', sizeof(' '));
 		}
-		else return ALL_GOOD;
+		else return 0;
 	}
-	return ALL_GOOD;
+	return 0;
 }
 
 bool is_prime(const int& number) {
@@ -109,4 +72,33 @@ void put_all_primes_until(std::set<int>& primes, int num) {
 		is_prime(i+1); //it pushes them for u
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
