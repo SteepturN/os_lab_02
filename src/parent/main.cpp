@@ -55,11 +55,11 @@ int main() {
 	int number = 1; //>0
 	bool all_ok = true;
 
-	int pipe_parent_to_son[2];//
-	char pipe_son_reading[20] = { 0 };
+	int pipe_parent_to_son[2] = { 0 };//
+	char pipe_son_reading_pchar_arg[20] = { 0 }; //
 
-	int pipe_son_to_parent[2];
-	char pipe_son_writing[20] = { 0 };
+	int pipe_son_to_parent[2] = { 0 }; //
+	char pipe_son_writing_pchar_arg[20] = { 0 }; //
 
 	if(pipe(pipe_parent_to_son)==-1) {//
 		if(write(STDERR, error_creating_pipe, sizeof(error_creating_pipe)) == -1) {
@@ -73,20 +73,21 @@ int main() {
 		}
 		return ERROR_CREATING_PIPE;//
 	}
-	if(std::to_chars(pipe_son_reading, pipe_son_reading+20, pipe_parent_to_son[READ_END]).ec == std::errc::value_too_large) {
+	if(std::to_chars(pipe_son_reading_pchar_arg, pipe_son_reading_pchar_arg+20, \
+	pipe_parent_to_son[READ_END]).ec == std::errc::value_too_large) {
 		if(write(STDERR, error_child_args, sizeof(error_child_args)) == -1) {
 			return ERROR_WRITING_ERR;
 		}
 		return ERROR_CHILD_ARGS;
 	}
 	//locale-independent - what does it mean?
-	if(std::to_chars(pipe_son_writing, pipe_son_writing+20, pipe_son_to_parent[WRITE_END]).ec == std::errc::value_too_large) {
+	if(std::to_chars(pipe_son_writing_pchar_arg, pipe_son_writing_pchar_arg+20, pipe_son_to_parent[WRITE_END]).ec == std::errc::value_too_large) {
 		if(write(STDERR, error_child_args, sizeof(error_child_args)) == -1) {
 			return ERROR_WRITING_ERR;
 		}
 		return ERROR_CHILD_ARGS;
 	}
-	//std::cout <<pipe_parent_to_son[READ_END] << " = " << pipe_son_reading << ' ' << pipe_son_to_parent[WRITE_END] << " = " << pipe_son_writing << std::endl;
+	//std::cout <<pipe_parent_to_son[READ_END] << " = " << pipe_son_reading_pchar_arg << ' ' << pipe_son_to_parent[WRITE_END] << " = " << pipe_son_writing_pchar_arg << std::endl;
 	pid_t pid = fork();
 	if(pid < 0) { //
 		if(write(STDERR, error_creating_process, sizeof(error_creating_process)) == -1) {
@@ -97,7 +98,7 @@ int main() {
 		//std::cout << "from child: child pid:" << getpid() << std::endl;//
 		close(pipe_parent_to_son[WRITE_END]); //errors?
 		close(pipe_son_to_parent[READ_END]); // why doesn't pipe close everywhere?
-		if(execl(filename, pipe_son_reading, pipe_son_writing, static_cast<char*>(NULL)) == -1) {// if I give pointer, would it work?
+		if(execl(filename, pipe_son_reading_pchar_arg, pipe_son_writing_pchar_arg, static_cast<char*>(NULL)) == -1) {// if I give pointer, would it work?
 			if(write(STDERR, error_executing_program, sizeof(error_executing_program)) == -1) {
 				return ERROR_WRITING_ERR;
 			}

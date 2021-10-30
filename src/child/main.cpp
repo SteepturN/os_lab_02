@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
 			}
 			return ERROR_READING_PIPE;
 		}
-		//std::cout << number
+		//std::cerr << number << ' ';
 		bool negative = number < 0;
 		bool prime = false;
 		if(!negative) {
@@ -76,7 +76,9 @@ int main(int argc, char* argv[]) {
 			return ERROR_WRITING_PIPE;
 		}
 		if(num_is_correct) {
+			for(long unsigned int i = 0; i < sizeof(number_string); i++) number_string[i] = '\0';
 			std::to_chars(number_string, number_string + sizeof(number_string), number);
+			//std::cerr << number_string << ' ';
 			for(long unsigned int i = 0; i < sizeof(number_string); ++i)
 				if(number_string[i] == '\0') { num_size_to_write = i; break;} //I can div 10
 			write(file_descriptor, number_string, num_size_to_write);
